@@ -1,0 +1,19 @@
+{% extends 'fitlog/base.html' %}
+
+{% block content %}
+  <h2>Daily Intake Log</h2>
+  <p>Total Calories: {{ total_calories }} kcal</p>
+  <p>Total Protein: {{ total_protein }} g</p>
+  <p>Total Carbs: {{ total_carbs }} g</p>
+  <p>Total Fats: {{ total_fats }} g</p>
+  <h3>Consumption List</h3>
+  <ul>
+{% for item in consumption %}
+  <li>{{ item.amount }}g of {{ item.food.name }} = {{ item.calories }} calories</li>
+{% endfor %}
+  </ul>
+<br>
+<div class="text-center"><a href="{% url 'calorie-tracker' %}" class="btn btn-primary btn-md my-4 primary-font" role="button">Add More</a></div>
+<br>
+<a href="{% url 'daily-summary1' %}" class="btn btn-primary mb-3">View Weekly Summary</a>
+{% endblock %}

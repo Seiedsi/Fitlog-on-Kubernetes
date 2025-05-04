@@ -1,0 +1,12 @@
+{% extends 'fitlog/base.html' %}
+{% load static %}
+
+{% block content %}
+    <div class="jumbotron">
+        <h1 class="display-4 text-center heading-font">Welcome to FitLog</h1>
+        <p class="lead text-center primary-font">Track your workout sessions and daily calorie intake effortlessly.</p>
+        <div class="text-center"><a href="{% url 'calorie-tracker' %}" class="btn btn-primary btn-lg my-4 primary-font" role="button">Track calories</a> Or
+            <a href="{% url 'workout-tracker' %}" class="btn btn-dark btn-lg my-4 primary-font" role="button">Track workouts</a>
+        </div>
+    </div>
+{% endblock %}

@@ -6,6 +6,7 @@ Django Kubernetes Deployment Guide:
         Docker installed
         Kubernetes cluster (Minikube for local testing)
         kubectl configured
+        
     Step 1: Containerize the Django App
         Create app/Dockerfile
         Build and test locally:
@@ -14,10 +15,13 @@ Django Kubernetes Deployment Guide:
             Push to Docker Hub: 
                 ```docker tag todo-app yourusername/todo-app
                 docker push yourusername/todo-app```
+                
     Step 2: Kubernetes Manifests
         Creating deployment.yaml and service.yaml
+        
     Step 3: CI/CD Pipeline
         .github/workflows/deploy.yml
+        
     Step 4: Deployment
         For Minikube:
             ```minikube start

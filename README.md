@@ -23,6 +23,12 @@ docker push yourusername/todo-app
 ```
 ### Step 2: Kubernetes Manifests
 Creating deployment.yaml and service.yaml
+Make sure to create django-secrets using:
+```bash
+kubectl create secret generic django-secrets \
+  --from-literal=secret-key='your-existing-secret-key-here' \
+  --from-literal=db-engine='sqlite'
+```
 ### Step 3: CI/CD Pipeline
 .github/workflows/deploy.yml
 ### Step 4: Deployment

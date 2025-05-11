@@ -5,7 +5,27 @@ on:
     branches: [ main ]
 
 jobs:
+  setup-minikube:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install Minikube
+      run: |
+        sudo apt-get update -q
+        curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
+        sudo install minikube-linux-amd64 /usr/local/bin/minikube
+        sudo apt-get install -y conntrack
+        
+    - name: Start Minikube
+      run: |
+        minikube start --driver=docker
+        minikube update-context
+        cat ~/.kube/config | base64 -w0 >> $GITHUB_OUTPUT
+      id: minikube-config
+
   build:
+    needs: setup-minikube
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
@@ -13,6 +33,7 @@ jobs:
     - name: Build Docker image
       working-directory: ./app
       run: |
+        eval $(minikube -p minikube docker-env)
         docker build -t fitlog .
 
   deploy:
@@ -20,20 +41,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-    - uses: azure/setup-kubectl@v3
     
-    - name: Configure Kubernetes access
+    - name: Configure kubectl
       run: |
-          mkdir -p ~/.kube
-          echo "${{ secrets.KUBE_CONFIG_DATA }}" | base64 --decode > ~/.kube/config
-
-          sed -i 's|C:\\\\Users\\\\WINDOWS\\\\.minikube|/home/runner/.minikube|g' ~/.kube/config
-          sed -i 's|\\\\|/|g' ~/.kube/config
-          chmod 600 ~/.kube/config
-
-    - name: Deploy to Kubernetes
-      working-directory: ./k8s
-      run: |
-        kubectl apply -f deployment.yaml
-        kubectl apply -f service.yaml
-        kubectl rollout status deployment/fitlog
+        mkdir -p ~/.kube
+        echo '${{ needs.setup-minikube.outputs.minikube-config }}' | base64 --decode > ~/.kube/config
+        kubectl cluster-info

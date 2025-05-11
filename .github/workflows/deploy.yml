@@ -23,7 +23,7 @@ jobs:
     - uses: azure/setup-kubectl@v3
     
     - name: Configure Kubernetes access
-        run: |
+      run: |
           mkdir -p ~/.kube
           echo "${{ secrets.KUBE_CONFIG_DATA }}" | base64 --decode > ~/.kube/config
           chmod 600 ~/.kube/config

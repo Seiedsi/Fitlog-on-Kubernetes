@@ -5,32 +5,8 @@ on:
     branches: [ main ]
 
 jobs:
-  setup-minikube:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-    
-    - name: Install Minikube
-      run: |
-        sudo apt-get update -q
-        curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
-        sudo install minikube-linux-amd64 /usr/local/bin/minikube
-        sudo apt-get install -y conntrack
-        
-    - name: Start Minikube cluster
-      run: |
-        minikube start --driver=docker
-        minikube docker-env >> $GITHUB_ENV  # Export docker env vars
-        echo "MINIKUBE_ACTIVE_DOCKERD=minikube" >> $GITHUB_ENV
-
   build:
-    needs: setup-minikube
     runs-on: ubuntu-latest
-    env:
-      DOCKER_HOST: ${{ env.DOCKER_HOST }}
-      DOCKER_CERT_PATH: ${{ env.DOCKER_CERT_PATH }}
-      DOCKER_TLS_VERIFY: ${{ env.DOCKER_TLS_VERIFY }}
-      MINIKUBE_ACTIVE_DOCKERD: ${{ env.MINIKUBE_ACTIVE_DOCKERD }}
     steps:
     - uses: actions/checkout@v4
     
@@ -44,16 +20,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
+    - uses: azure/setup-kubectl@v3
     
-    - name: Configure kubectl
-      run: |
-        mkdir -p ~/.kube
-        minikube update-context
-        kubectl cluster-info
-
     - name: Deploy to Kubernetes
       working-directory: ./k8s
       run: |
         kubectl apply -f deployment.yaml
         kubectl apply -f service.yaml
         kubectl rollout status deployment/fitlog
+      env:
+        KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_DATA }}

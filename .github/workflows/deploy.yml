@@ -28,5 +28,3 @@ jobs:
         kubectl apply -f deployment.yaml
         kubectl apply -f service.yaml
         kubectl rollout status deployment/fitlog
-      env:
-        KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_DATA }}

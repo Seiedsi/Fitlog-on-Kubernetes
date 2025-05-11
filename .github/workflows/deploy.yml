@@ -2,13 +2,36 @@ name: Django Kubernetes Deployment
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
-  build:
+  setup-minikube:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
+    
+    - name: Install Minikube and dependencies
+      run: |
+        sudo apt-get update -q
+        curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
+        sudo install minikube-linux-amd64 /usr/local/bin/minikube
+        sudo apt-get install -y conntrack
+        
+    - name: Start Minikube cluster
+      run: |
+        minikube start --driver=docker
+        minikube update-context
+        minikube docker-env >> $GITHUB_ENV
+        echo "KUBE_CONFIG=$(minikube kubectl -- config view --raw | base64 -w0)" >> $GITHUB_ENV
+
+  build:
+    needs: setup-minikube
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Docker environment
+      run: eval $(minikube docker-env)
     
     - name: Build Docker image
       working-directory: ./app
@@ -22,11 +45,18 @@ jobs:
     - uses: actions/checkout@v4
     - uses: azure/setup-kubectl@v3
     
+    - name: Configure Kubernetes access
+      run: |
+        mkdir -p ~/.kube
+        echo "$KUBE_CONFIG" | base64 --decode > ~/.kube/config
+        chmod 600 ~/.kube/config
+        kubectl cluster-info
+      env:
+        KUBE_CONFIG: ${{ needs.setup-minikube.outputs.KUBE_CONFIG }}
+    
     - name: Deploy to Kubernetes
       working-directory: ./k8s
       run: |
-        kubectl apply -f deployment.yaml --validate=false
+        kubectl apply -f deployment.yaml
         kubectl apply -f service.yaml
         kubectl rollout status deployment/fitlog
-      env:
-        KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_DATA }}

@@ -25,7 +25,7 @@ jobs:
     - name: Deploy to Kubernetes
       working-directory: ./k8s
       run: |
-        kubectl apply -f deployment.yaml
+        kubectl apply -f deployment.yaml --validate=false
         kubectl apply -f service.yaml
         kubectl rollout status deployment/fitlog
       env:

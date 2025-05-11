@@ -17,23 +17,26 @@ jobs:
         sudo install minikube-linux-amd64 /usr/local/bin/minikube
         sudo apt-get install -y conntrack
         
-    - name: Start Minikube
+    - name: Start Minikube cluster
       run: |
         minikube start --driver=docker
-        minikube update-context
-        cat ~/.kube/config | base64 -w0 >> $GITHUB_OUTPUT
-      id: minikube-config
+        minikube docker-env >> $GITHUB_ENV  # Export docker env vars
+        echo "MINIKUBE_ACTIVE_DOCKERD=minikube" >> $GITHUB_ENV
 
   build:
     needs: setup-minikube
     runs-on: ubuntu-latest
+    env:
+      DOCKER_HOST: ${{ env.DOCKER_HOST }}
+      DOCKER_CERT_PATH: ${{ env.DOCKER_CERT_PATH }}
+      DOCKER_TLS_VERIFY: ${{ env.DOCKER_TLS_VERIFY }}
+      MINIKUBE_ACTIVE_DOCKERD: ${{ env.MINIKUBE_ACTIVE_DOCKERD }}
     steps:
     - uses: actions/checkout@v4
     
     - name: Build Docker image
       working-directory: ./app
       run: |
-        eval $(minikube -p minikube docker-env)
         docker build -t fitlog .
 
   deploy:
@@ -45,5 +48,12 @@ jobs:
     - name: Configure kubectl
       run: |
         mkdir -p ~/.kube
-        echo '${{ needs.setup-minikube.outputs.minikube-config }}' | base64 --decode > ~/.kube/config
+        minikube update-context
         kubectl cluster-info
+
+    - name: Deploy to Kubernetes
+      working-directory: ./k8s
+      run: |
+        kubectl apply -f deployment.yaml
+        kubectl apply -f service.yaml
+        kubectl rollout status deployment/fitlog

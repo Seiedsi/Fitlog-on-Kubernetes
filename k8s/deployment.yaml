@@ -17,17 +17,9 @@ spec:
         image: seiedsi/fitlog:latest
         ports:
         - containerPort: 8000
-        env:
-        - name: DJANGO_ENV
-          value: "production"
-        - name: SECRET_KEY
-          valueFrom:
-            secretKeyRef:
-              name: django-secrets
-              key: secret-key
         livenessProbe:
           httpGet:
-            path: /health/
+            path: /signup/
             port: 8000
           initialDelaySeconds: 30
           periodSeconds: 10

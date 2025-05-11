@@ -14,7 +14,6 @@ jobs:
       working-directory: ./app
       run: |
         docker build -t fitlog .
-        # Add registry push if using remote registry
 
   deploy:
     needs: build
